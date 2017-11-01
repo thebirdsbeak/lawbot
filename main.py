@@ -9,8 +9,8 @@ import os
 import time
 from slackclient import SlackClient
 
-# starterbot's ID 
-BOT_ID = "ID"
+# starterbot's ID
+BOT_ID = str(SlackClient(os.environ.get('BOT_ID')))
 
 # constants
 AT_BOT = "<@" + BOT_ID + ">"
@@ -21,7 +21,7 @@ SIGNATORIES = {"nda": ["Craig", "Anoop", "Flaviana"],
 signer_options = ["NDA", "Partner Order Form", "Freelance Agreement" ]
 
 # instantiate Slack & Twilio clients
-slack_client = SlackClient('client')
+slack_client = SlackClient(os.environ.get('SLACK_TOKEN'))
 
 def who_signs(contract_type):
     if contract_type == "options":
