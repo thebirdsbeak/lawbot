@@ -1,0 +1,7 @@
+You need the env_variables.txt file to run this app, or add your own:
+
+run: source lawbot/bin/activate	
+
+export SLACK_TOKEN= 'YOUR SLACK API TOKEN' 
+
+export BOT_ID='YOU BOT ID'

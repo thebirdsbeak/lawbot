@@ -1,0 +1,10 @@
+env_variables.txt
+bin/
+lib/
+__pycache__/
+*.py[cod]
+.DS_Store
+.Python
+*.env
+lawbot/pip-selfcheck.json
+lawbot/include/python2.7

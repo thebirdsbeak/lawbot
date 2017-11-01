@@ -8,20 +8,25 @@ A legal helper slackbot
 import os
 import time
 from slackclient import SlackClient
+from master_list import signatories as SIGNATORIES
 
 # starterbot's ID
-BOT_ID = ""
+
+BOT_ID = str(SlackClient(os.environ.get('BOT_ID')))
+
 
 # constants
 AT_BOT = "<@" + BOT_ID + ">"
 EXAMPLE_COMMAND = "whosigns"
-SIGNATORIES = {"nda": ["Craig", "Anoop", "Flaviana"],
-               "partner": ["Graeme", "Catherine", "Andrew"],
-               "freelance":  ["Martin", "Dabo", "Robert"]}
+#SIGNATORIES = {"nda": ["Craig", "Anoop", "Flaviana"],
+               #"partner": ["Graeme", "Catherine", "Andrew"],
+               #"freelance":  ["Martin", "Dabo", "Robert"]}
 signer_options = ["NDA", "Partner Order Form", "Freelance Agreement" ]
 
 # instantiate Slack & Twilio clients
-slack_client = SlackClient('')
+
+slack_client = SlackClient(os.environ.get('SLACK_TOKEN'))
+
 
 def who_signs(contract_type):
     if contract_type == "options":
