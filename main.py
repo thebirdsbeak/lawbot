@@ -1,9 +1,9 @@
 '''
-A legal helper slackbot 
+A legal helper slackbot
 '''
 
 #In progress: whosigns command, signatory lisy (SIGNATORIES),
-#To do: make link to binder, process inputs for easier contract type searching 
+#To do: make link to binder, process inputs for easier contract type searching
 
 import os
 import time
@@ -11,7 +11,9 @@ from slackclient import SlackClient
 from master_list import signatories as SIGNATORIES
 
 # starterbot's ID
+
 BOT_ID = str(SlackClient(os.environ.get('BOT_ID')))
+
 
 # constants
 AT_BOT = "<@" + BOT_ID + ">"
@@ -22,7 +24,9 @@ EXAMPLE_COMMAND = "whosigns"
 signer_options = ["NDA", "Partner Order Form", "Freelance Agreement" ]
 
 # instantiate Slack & Twilio clients
+
 slack_client = SlackClient(os.environ.get('SLACK_TOKEN'))
+
 
 def who_signs(contract_type):
     if contract_type == "options":
@@ -31,16 +35,24 @@ def who_signs(contract_type):
     else:
         contract_type = contract_type.lower()
         try:
-            signers = ', '.join(SIGNATORIES[contract_type])
-            return "The signers are {}.".format(signers)
+            signer_list = []
+            #signers = ', '.join(SIGNATORIES[contract_type])
+            for signer in SIGNATORIES[contract_type]:
+                signer_list.append(signer)
+            message_string = ''
+            for signer in signer_list:
+                location =  'https://flightdeck.skyscannertools.net/index.html?id=' + signer.replace(' ', '')
+                message_string += '{} - {}\n'.format(signer, location)
+            return message_string
         except:
             return "Not sure about that, I only know: {}.\n Add 'options' after a command for more info.".format(', '.join(signer_options))
 
 def main_options():
-    return "[whosigns] [type]: Returns authorised signatories for the chosen contract type."
-   
+    return '''[whosigns] [type]: Returns authorised signatories for the chosen contract type
+[binder] serves a link to the contract creation system.'''
+
 def binder():
-    return 'https://thebirdsbeak.com'
+    return 'https://skyscanner.agiloft.com/gui2/samlssologin.jsp?project=Skyscanner'
 
 def handle_command(command, channel):
     """
@@ -58,7 +70,7 @@ def handle_command(command, channel):
         response = binder()
     slack_client.api_call("chat.postMessage", channel=channel, \
                           text=response, as_user=False)
-                          
+
 
 def parse_slack_output(slack_rtm_output):
     """
@@ -87,5 +99,3 @@ if __name__ == "__main__":
             time.sleep(READ_WEBSOCKET_DELAY)
     else:
         print("Connection failed. Invalid Slack token or bot ID?")
-
-
