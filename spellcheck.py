@@ -6,7 +6,7 @@ def spellcheck(attempt, real, threshold):
     if type(real) == list or type(real == dict):
         score_list = []
         for key in real:
-            check_score = fuzz.ratio(i, attempt)
+            check_score = fuzz.ratio(key, attempt)
             if check_score >= threshold:
                 score_list.append((key,  check_score))
         if score_list:
