@@ -7,7 +7,7 @@ A legal helper slackbot
 
 import os
 import time
-from fuzzywuzzy import fuzz
+from spellcheck import spellcheck
 from slackclient import SlackClient
 from master_list import signatories as SIGNATORIES
 
@@ -22,7 +22,6 @@ EXAMPLE_COMMAND = "whosigns"
 signer_options = ["NDA", "Partner Order Form", "Freelance Agreement" ]
 
 # instantiate Slack & Twilio clients
-
 slack_client = SlackClient(os.environ.get('SLACK_TOKEN'))
 
 def who_signs(contract_type):
@@ -34,18 +33,15 @@ def who_signs(contract_type):
         try:
             contract_selected = []
             signer_list = []
-            for spelling in SIGNATORIES:
-                spellcheck = fuzz.ratio(contract_type, spelling)
-                if spellcheck > 70:
-                    contract_selected.append(spelling)
-            contract = contract_selected[0]
-            for signer in SIGNATORIES[contract]:
-                signer_list.append(signer)
-            message_string = ''
-            for signer in signer_list:
-                location =  'https://flightdeck.skyscannertools.net/index.html?id=' + signer.replace(' ', '')
-                message_string += '{} - {}\n'.format(signer, location)
-            return message_string
+            contract = spellcheck(contract_type, SIGNATORIES, 60)
+            if contract:
+                for signer in SIGNATORIES[contract]:
+                    signer_list.append(signer)
+                message_string = ''
+                for signer in signer_list:
+                    location =  'https://flightdeck.skyscannertools.net/index.html?id=' + signer.replace(' ', '')
+                    message_string += '{} - {}\n'.format(signer, location)
+                return message_string
         except Exception as e:
             return str(e)
             #return "Not sure about that, I only know: {}.\n Add 'options' after a command for more info.".format(', '.join(signer_options))
