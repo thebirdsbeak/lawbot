@@ -7,31 +7,23 @@ A legal helper slackbot
 
 import os
 import time
+from fuzzywuzzy import fuzz
 from slackclient import SlackClient
 from master_list import signatories as SIGNATORIES
 
 # starterbot's ID
-
 BOT_ID = os.environ.get('BOT_ID')
-
-print(BOT_ID)
 
 # constants
 AT_BOT = "<@{}>".format(BOT_ID)
 
 EXAMPLE_COMMAND = "whosigns"
 
-
-
-#SIGNATORIES = {"nda": ["Craig", "Anoop", "Flaviana"],
-               #"partner": ["Graeme", "Catherine", "Andrew"],
-               #"freelance":  ["Martin", "Dabo", "Robert"]}
 signer_options = ["NDA", "Partner Order Form", "Freelance Agreement" ]
 
 # instantiate Slack & Twilio clients
 
 slack_client = SlackClient(os.environ.get('SLACK_TOKEN'))
-
 
 def who_signs(contract_type):
     if contract_type == "options":
@@ -40,17 +32,23 @@ def who_signs(contract_type):
     else:
         contract_type = contract_type.lower()
         try:
+            contract_selected = []
             signer_list = []
-            #signers = ', '.join(SIGNATORIES[contract_type])
-            for signer in SIGNATORIES[contract_type]:
+            for spelling in SIGNATORIES:
+                spellcheck = fuzz.ratio(contract_type, spelling)
+                if spellcheck > 70:
+                    contract_selected.append(spelling)
+            contract = contract_selected[0]
+            for signer in SIGNATORIES[contract]:
                 signer_list.append(signer)
             message_string = ''
             for signer in signer_list:
                 location =  'https://flightdeck.skyscannertools.net/index.html?id=' + signer.replace(' ', '')
                 message_string += '{} - {}\n'.format(signer, location)
             return message_string
-        except:
-            return "Not sure about that, I only know: {}.\n Add 'options' after a command for more info.".format(', '.join(signer_options))
+        except Exception as e:
+            return str(e)
+            #return "Not sure about that, I only know: {}.\n Add 'options' after a command for more info.".format(', '.join(signer_options))
 
 def main_options():
     return '''[whosigns] [type]: Returns authorised signatories for the chosen contract type
