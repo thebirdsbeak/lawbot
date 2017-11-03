@@ -8,3 +8,4 @@ __pycache__/
 *.env
 lawbot/pip-selfcheck.json
 lawbot/include/python2.7
+master_list.py
