@@ -3,7 +3,7 @@ from fuzzywuzzy import fuzz
 def spellcheck(attempt, real, threshold):
     '''Returns a highest scoring "attempt" match
     against "real" spelling over the "threshold"'''
-    if type(real) == list or type(real == dict):
+    if type(real) == list or type(real) == dict:
         score_list = []
         for key in real:
             check_score = fuzz.ratio(key, attempt)

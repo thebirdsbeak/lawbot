@@ -11,3 +11,7 @@ signatories={
 # so we can explain if they are available user.status_text and/ or user.status_emoji
 # we can also handle if users are deleted or no longer active here 
 
+greetings = ["hello","hi","hey", "yo", "greetings","sup","hiya",
+             "salutations", "howdy", "howdy-doody", "bonjour",
+             "morning", "good day", "good morning", "buenas dias",
+             "buenas noches"]

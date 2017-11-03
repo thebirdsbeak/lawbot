@@ -10,6 +10,8 @@ import time
 from spellcheck import spellcheck
 from slackclient import SlackClient
 from master_list import signatories as SIGNATORIES
+from master_list import greetings as greetings
+from fuzzywuzzy import fuzz
 
 # starterbot's ID
 BOT_ID = os.environ.get('BOT_ID')
@@ -53,6 +55,9 @@ def main_options():
 def binder():
     return 'https://skyscanner.agiloft.com/gui2/samlssologin.jsp?project=Skyscanner'
 
+def greeting(hello):
+    return ("{} indeed! How can I help?\nEnter @lawbot options for your choices.".format(hello.title()))
+
 def handle_command(command, channel):
     """
         Receives commands directed at the bot and determines if they
@@ -60,15 +65,19 @@ def handle_command(command, channel):
         returns back what it needs for clarification.
     """
     response = "I didn't catch that - try 'options' for the choices I understand."
-    if command.startswith("whosigns"):
-        contract_type = command.split(' ')
-        response = who_signs(contract_type[1])
-    elif command.startswith("options"):
+    command = command.split(' ')
+    if spellcheck(command[0], "whosigns", 70):
+        contract_type = command[1]
+        response = who_signs(contract_type)
+    elif spellcheck(command[0], "options", 80):
         response = main_options()
-    elif command.startswith("binder"):
+    elif spellcheck(command[0], "binder", 80):
         response = binder()
-    slack_client.api_call("chat.postMessage", channel=channel, \
-                          text=response, as_user=False)
+    elif spellcheck(command[0], greetings, 70):
+        response = greeting(spellcheck(command[0], greetings, 70))
+
+    #calls the slack API to post te message    
+    slack_client.api_call("chat.postMessage", channel=channel, text=response, as_user=False)
 
 
 def parse_slack_output(slack_rtm_output):
