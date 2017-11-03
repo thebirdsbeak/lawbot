@@ -19,6 +19,8 @@ BOT_ID = os.environ.get('BOT_ID')
 # constants
 AT_BOT = "<@{}>".format(BOT_ID)
 
+THRESHOLD = 80 #threshold for spellcheck function 
+
 EXAMPLE_COMMAND = "whosigns"
 
 signer_options = ["NDA", "Partner Order Form", "Freelance Agreement" ]
@@ -35,7 +37,7 @@ def who_signs(contract_type):
         try:
             contract_selected = []
             signer_list = []
-            contract = spellcheck(contract_type, SIGNATORIES, 60)
+            contract = spellcheck(contract_type, SIGNATORIES, THRESHOLD - 10)
             if contract:
                 for signer in SIGNATORIES[contract]:
                     signer_list.append(signer)
@@ -66,15 +68,18 @@ def handle_command(command, channel):
     """
     response = "I didn't catch that - try 'options' for the choices I understand."
     command = command.split(' ')
-    if spellcheck(command[0], "whosigns", 70):
+    if spellcheck(command[0], "whosigns", THRESHOLD):
         contract_type = command[1]
         response = who_signs(contract_type)
-    elif spellcheck(command[0], "options", 80):
+    elif spellcheck(command[0], "options", THRESHOLD):
         response = main_options()
-    elif spellcheck(command[0], "binder", 80):
+    elif spellcheck(command[0], "binder", THRESHOLD):
         response = binder()
-    elif spellcheck(command[0], greetings, 70):
-        response = greeting(spellcheck(command[0], greetings, 70))
+    elif spellcheck(command[0], greetings, THRESHOLD):
+        response = greeting(spellcheck(command[0], greetings, THRESHOLD))
+
+    if not response: 
+        response = "Computer says no!"
 
     #calls the slack API to post te message    
     slack_client.api_call("chat.postMessage", channel=channel, text=response, as_user=False)
