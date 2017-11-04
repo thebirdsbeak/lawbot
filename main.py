@@ -19,7 +19,7 @@ BOT_ID = os.environ.get('BOT_ID')
 # constants
 AT_BOT = "<@{}>".format(BOT_ID)
 
-THRESHOLD = 80 #threshold for spellcheck function 
+THRESHOLD = 80 #threshold for spellcheck function
 
 EXAMPLE_COMMAND = "whosigns"
 
@@ -78,10 +78,10 @@ def handle_command(command, channel):
     elif spellcheck(command[0], greetings, THRESHOLD):
         response = greeting(spellcheck(command[0], greetings, THRESHOLD))
 
-    if not response: 
+    if not response:
         response = "Computer says no!"
 
-    #calls the slack API to post te message    
+    #calls the slack API to post te message
     slack_client.api_call("chat.postMessage", channel=channel, text=response, as_user=False)
 
 
