@@ -12,6 +12,8 @@ from slackclient import SlackClient
 from master_list import signatories as SIGNATORIES
 from master_list import greetings as greetings
 from fuzzywuzzy import fuzz
+from bs4 import BeautifulSoup
+import requests
 
 # starterbot's ID
 BOT_ID = os.environ.get('BOT_ID')
@@ -44,7 +46,7 @@ def who_signs(contract_type):
                 message_string = ''
                 for signer in signer_list:
                     location =  'https://flightdeck.skyscannertools.net/index.html?id=' + signer.replace(' ', '')
-                    message_string += '{} - {}\n'.format(signer, location)
+                    message_string += '*»-(¯`·.·´¯)-> {} <-(¯`·.·´¯)-«*\n*{}* - {}\n'.format(contract, signer, location)
                 return message_string
         except Exception as e:
             return str(e)
@@ -54,10 +56,55 @@ def main_options():
     return '''[whosigns] [type]: Returns authorised signatories for the chosen contract type
 [binder] serves a link to the contract creation system.'''
 
+def company_details(command):
+    '''Search for address, company number'''
+    if len(command) > 0:
+        query = '+'.join(command[1::])
+        query = query.replace('+limited', '').replace('+plc','')
+        n = 0
+        choice_array = []
+        record = []
+        addresses = []
+        companystrings = ''
+        url = "https://beta.companieshouse.gov.uk/search/companies?q="+query
+        print(url)
+
+        data = requests.get(url)
+        data = data.text
+        soup = BeautifulSoup(data, "html.parser")
+        for link in soup.find_all('a'):
+            comp_option = str(link)
+            if 'SearchSuggestions' in comp_option:
+                n += 1
+                choice_array.append(str(n))
+                comp_url = str(link.get('href'))
+                comp_ref = comp_url.replace('/company/', '')
+                namepart = str(link.contents).replace('<strong>', '').replace('</strong>', '').replace('[', '').replace(']', '').replace('\\n', '').replace(',', '').replace("'", '')
+                namepart = ' '.join(namepart.split())
+                nameoption = namepart.strip().lstrip()
+                companystrings = nameoption
+                record.append((companystrings, comp_ref))
+
+        try:
+            finalist = []
+            for link in soup.find_all('p', class_=""):
+                if "<strong" not in str(link) and "matches" not in str(link) and "<img" not in str(link):
+                    addresses.append(link.contents[0])
+            information = list(zip(record, addresses))
+            for i in information[0:10]:
+                finalist.append("*{}*, {}, {}.".format(i[0][0], i[0][1], i[1]))
+            return '\n'.join(finalist)
+        except:
+            return "No companies found!"
+    else:
+        return
+
 def binder():
+    '''returns link to binder login'''
     return 'https://skyscanner.agiloft.com/gui2/samlssologin.jsp?project=Skyscanner'
 
 def greeting(hello):
+    '''handles greetings and responds in kind'''
     return ("{} indeed! How can I help?\nEnter @lawbot options for your choices.".format(hello.title()))
 
 def handle_command(command, channel):
@@ -75,13 +122,15 @@ def handle_command(command, channel):
         response = main_options()
     elif spellcheck(command[0], "binder", THRESHOLD):
         response = binder()
+    elif spellcheck(command[0], "company", THRESHOLD):
+        response = company_details(command)
     elif spellcheck(command[0], greetings, THRESHOLD):
         response = greeting(spellcheck(command[0], greetings, THRESHOLD))
 
     if not response:
         response = "Computer says no!"
 
-    #calls the slack API to post te message
+    #calls the slack API to post the message
     slack_client.api_call("chat.postMessage", channel=channel, text=response, as_user=False)
 
 
