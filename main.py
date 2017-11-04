@@ -20,8 +20,6 @@ AT_BOT = "<@{}>".format(BOT_ID)
 
 THRESHOLD = 80 #threshold for spellcheck function
 
-EXAMPLE_COMMAND = "whosigns"
-
 # instantiate Slack & Twilio clients
 slack_client = SlackClient(os.environ.get('SLACK_TOKEN'))
 
