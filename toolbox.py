@@ -1,6 +1,10 @@
 import requests
 from bs4 import BeautifulSoup
 
+def binder():
+    '''returns link to binder login'''
+    return 'https://skyscanner.agiloft.com/gui2/samlssologin.jsp?project=Skyscanner'
+
 def maxims():
     from random import randint
     '''Reads the maxims and passes the variable to function
