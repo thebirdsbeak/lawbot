@@ -14,6 +14,7 @@ from master_list import greetings as greetings
 from fuzzywuzzy import fuzz
 from bs4 import BeautifulSoup
 import requests
+from maxims import maxims
 
 # starterbot's ID
 BOT_ID = os.environ.get('BOT_ID')
@@ -53,8 +54,10 @@ def who_signs(contract_type):
             #return "Not sure about that, I only know: {}.\n Add 'options' after a command for more info.".format(', '.join(signer_options))
 
 def main_options():
-    return '''[whosigns] [type]: Returns authorised signatories for the chosen contract type
-[binder] serves a link to the contract creation system.'''
+    return '''[whosigns] [type]: Returns authorised signatories for the chosen contract type\n
+[binder]@ Serves a link to the contract creation system.\n
+[company] [company name]: Search for UK company number and address.\n
+[maxim]: grab a random classic legal principle'''
 
 def company_details(command):
     '''Search for address, company number'''
@@ -124,6 +127,8 @@ def handle_command(command, channel):
         response = binder()
     elif spellcheck(command[0], "company", THRESHOLD):
         response = company_details(command)
+    elif spellcheck(command[0], "maxim", THRESHOLD):
+        response = maxims()
     elif spellcheck(command[0], greetings, THRESHOLD):
         response = greeting(spellcheck(command[0], greetings, THRESHOLD))
 
