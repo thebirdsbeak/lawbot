@@ -2,16 +2,13 @@
 A legal helper slackbot
 '''
 
-# TO DO - APAC signatories
-
 import os
 import time
 from slackclient import SlackClient
 from spellcheck import spellcheck
-from master_list import signatories as SIGNATORIES
 from master_list import greetings as greetings
 
-from toolbox import maxims, company_details, binder, disclaimer
+from toolbox import maxims, company_details, binder, disclaimer, who_signs
 
 # constants
 BOT_ID = os.environ.get('BOT_ID')
@@ -34,29 +31,6 @@ def greeting(hello):
     '''handles greetings and responds in kind'''
     return ("{} indeed! How can I help?\nEnter ''@lawbot options' for your choices.".format(hello.title()))
 
-def who_signs(contract_type):
-    '''Function that grabs and returns the signatories'''
-    if len(contract_type) > 1:
-        if contract_type[1] == "options":
-            options = [key for key in SIGNATORIES]
-            return ('\n'.join(options)).title()
-        else:
-            contract_type = contract_type[1].lower()
-            try:
-                contract = spellcheck(contract_type, SIGNATORIES, THRESHOLD - 10)
-                if contract:
-                    signer_list = [signer for signer in SIGNATORIES[contract]]
-                    message_string = '*----> {} <----*\n'.format(contract)
-                    for signer in signer_list:
-                        signer = signer.replace(' ', '')
-                        location =  'https://flightdeck.skyscannertools.net/index.html?id='+signer
-                        message_string += '*{}* - {}\n'.format(signer, location)
-                    return message_string
-    # Remove returning error before prod
-            except Exception as error:
-                return str(error)
-    else:
-        return ERROR_RESPONSE
 def handle_command(command, channel):
     """
         Processes user input and assigns relevant function
@@ -65,7 +39,7 @@ def handle_command(command, channel):
     bot_input = command.split(' ')
     main_input = bot_input[0]
     if spellcheck(main_input, "whosigns", THRESHOLD):
-        response = who_signs(bot_input)
+        response = who_signs(bot_input, THRESHOLD)
     elif spellcheck(main_input, "options", THRESHOLD):
         response = main_options()
     elif spellcheck(main_input, "binder", THRESHOLD):
