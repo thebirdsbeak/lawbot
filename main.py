@@ -10,12 +10,15 @@ from slackclient import SlackClient
 from spellcheck import spellcheck
 from master_list import signatories as SIGNATORIES
 from master_list import greetings as greetings
-from toolbox import maxims, company_details, binder
+
+from toolbox import maxims, company_details, binder, disclaimer
 
 # constants
 BOT_ID = os.environ.get('BOT_ID')
 AT_BOT = "<@{}>".format(BOT_ID)
 THRESHOLD = 80 #threshold for spellcheck function
+ERROR_RESPONSE = "Sorry, I don't understand - try adding 'options' for the choices I know."
+
 # instantiate Slack & Twilio clients
 slack_client = SlackClient(os.environ.get('SLACK_TOKEN'))
 
@@ -24,54 +27,59 @@ def main_options():
     return '''[whosigns] [type]: Returns authorised signatories for the chosen contract type\n
 [binder]@ Serves a link to the contract creation system.\n
 [company] [company name]: Search for UK company number and address.\n
-[maxim]: grab a random classic legal principle'''
+[disclaimer] [channel]: Returns recommended disclaimer wording.\n
+[maxim]: grab a random classic legal principle.'''
 
 def greeting(hello):
     '''handles greetings and responds in kind'''
-    return ("{} indeed! How can I help?\nEnter @lawbot options for your choices.".format(hello.title()))
+    return ("{} indeed! How can I help?\nEnter ''@lawbot options' for your choices.".format(hello.title()))
 
 def who_signs(contract_type):
     '''Function that grabs and returns the signatories'''
-    if contract_type == "options":
-        options = [key for key in SIGNATORIES]
-        return ('\n'.join(options)).title()
+    if len(contract_type) > 1:
+        if contract_type[1] == "options":
+            options = [key for key in SIGNATORIES]
+            return ('\n'.join(options)).title()
+        else:
+            contract_type = contract_type[1].lower()
+            try:
+                contract = spellcheck(contract_type, SIGNATORIES, THRESHOLD - 10)
+                if contract:
+                    signer_list = [signer for signer in SIGNATORIES[contract]]
+                    message_string = '*----> {} <----*\n'.format(contract)
+                    for signer in signer_list:
+                        signer = signer.replace(' ', '')
+                        location =  'https://flightdeck.skyscannertools.net/index.html?id='+signer
+                        message_string += '*{}* - {}\n'.format(signer, location)
+                    return message_string
+    # Remove returning error before prod
+            except Exception as error:
+                return str(error)
     else:
-        contract_type = contract_type.lower()
-        try:
-            contract = spellcheck(contract_type, SIGNATORIES, THRESHOLD - 10)
-            if contract:
-                signer_list = [signer for signer in SIGNATORIES[contract]]
-                message_string = '*>>----> {} <----<<*\n'.format(contract)
-                for signer in signer_list:
-                    signer.replace(' ', '')
-                    location =  'https://flightdeck.skyscannertools.net/index.html?id='+signer
-                    message_string += '*{}* - {}\n'.format(signer, location)
-                return message_string
-# Remove returning error before prod
-        except Exception as error:
-            return str(error)
-
+        return ERROR_RESPONSE
 def handle_command(command, channel):
     """
         Processes user input and assigns relevant function
     """
-    response = "I didn't catch that - try 'options' for the choices I understand."
-    command = command.split(' ')
-    if spellcheck(command[0], "whosigns", THRESHOLD):
-        contract_type = command[1]
-        response = who_signs(contract_type)
-    elif spellcheck(command[0], "options", THRESHOLD):
+    response = ERROR_RESPONSE
+    bot_input = command.split(' ')
+    main_input = bot_input[0]
+    if spellcheck(main_input, "whosigns", THRESHOLD):
+        response = who_signs(bot_input)
+    elif spellcheck(main_input, "options", THRESHOLD):
         response = main_options()
-    elif spellcheck(command[0], "binder", THRESHOLD):
+    elif spellcheck(main_input, "binder", THRESHOLD):
         response = binder()
-    elif spellcheck(command[0], "company", THRESHOLD):
-        response = company_details(command)
-    elif spellcheck(command[0], "maxim", THRESHOLD):
+    elif spellcheck(main_input, "company", THRESHOLD):
+        response = company_details(bot_input)
+    elif spellcheck(main_input, "maxim", THRESHOLD):
         response = maxims()
-    elif spellcheck(command[0], greetings, THRESHOLD):
-        response = greeting(spellcheck(command[0], greetings, THRESHOLD))
+    elif spellcheck(main_input, greetings, THRESHOLD):
+        response = greeting(spellcheck(main_input, greetings, THRESHOLD))
+    elif spellcheck(main_input, "disclaimer", THRESHOLD):
+        response = disclaimer(bot_input)
     if not response:
-        response = "Computer says no!"
+        response = ERROR_RESPONSE
     #calls the slack API to post the message
     slack_client.api_call("chat.postMessage", channel=channel, text=response, as_user=False)
 

@@ -1,5 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
+from master_list import disclaimers as DISCLAIMERS
 
 def binder():
     '''returns link to binder login'''
@@ -18,6 +19,24 @@ def maxims():
 
     maximselection = randint(0, len(contentslist))
     return "{}".format(contentslist[maximselection])
+
+def disclaimer(disclaimer_type):
+    if len(disclaimer_type) > 1:
+        if disclaimer_type[1] == "options":
+            options = [key for key in DISCLAIMERS]
+            return ('\n'.join(options)).title()
+        else:
+            try:
+                disclaimer_query = spellcheck(disclaimer_type[1], DISCLAIMERS, THRESHOLD)
+                print(disclaimer_query)
+            except:
+                return "I don't understand - try 'disclaimer options' for options."
+            if disclaimer_query:
+                return(DISCLAIMERS[disclaimer_query])
+            else:
+                print("Nothing found!")
+    else:
+        return
 
 def company_details(company_name):
     '''Search for address, company number'''
