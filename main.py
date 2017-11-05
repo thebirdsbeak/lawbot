@@ -44,7 +44,8 @@ def who_signs(contract_type):
                 message_string = ''
                 for signer in signer_list:
                     location =  'https://flightdeck.skyscannertools.net/index.html?id=' + signer.replace(' ', '')
-                    message_string += '{} - {}\n'.format(signer, location)
+                    email_address = email_from_name_string(signer) # building email address to find slack user in profiles list
+                    message_string += '{} - {} - {}\n'.format(signer, location, email_address)
                 return message_string
         except Exception as e:
             return str(e)
@@ -59,6 +60,13 @@ def binder():
 
 def greeting(hello):
     return ("{} indeed! How can I help?\nEnter @lawbot options for your choices.".format(hello.title()))
+
+def email_from_name_string(string):
+    if len(string.split()) < 2:
+        return False
+    else:
+        email = string.split()[0] + "." + string.split()[1] + "@skyscanner.net"
+    return email
 
 def handle_command(command, channel):
     """
@@ -83,7 +91,6 @@ def handle_command(command, channel):
 
     #calls the slack API to post te message    
     slack_client.api_call("chat.postMessage", channel=channel, text=response, as_user=False)
-
 
 def parse_slack_output(slack_rtm_output):
     """
