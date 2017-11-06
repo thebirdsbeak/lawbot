@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import requests
 from bs4 import BeautifulSoup
 from master_list import disclaimers as DISCLAIMERS
@@ -22,7 +24,7 @@ def maxims():
     maximselection = randint(0, len(contentslist))
     return "{}".format(contentslist[maximselection])
 
-def disclaimer(disclaimer_type):
+def disclaimer(disclaimer_type, THRESHOLD):
     if len(disclaimer_type) > 1:
         if disclaimer_type[1] == "options":
             options = [key for key in DISCLAIMERS]
@@ -30,7 +32,6 @@ def disclaimer(disclaimer_type):
         else:
             try:
                 disclaimer_query = spellcheck(disclaimer_type[1], DISCLAIMERS, THRESHOLD)
-                print(disclaimer_query)
             except:
                 return "I don't understand - try 'disclaimer options' for options."
             if disclaimer_query:

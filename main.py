@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 '''
 A legal helper slackbot
 '''
@@ -51,7 +53,7 @@ def handle_command(command, channel):
     elif spellcheck(main_input, greetings, THRESHOLD):
         response = greeting(spellcheck(main_input, greetings, THRESHOLD))
     elif spellcheck(main_input, "disclaimer", THRESHOLD):
-        response = disclaimer(bot_input)
+        response = disclaimer(bot_input, THRESHOLD)
     if not response:
         response = ERROR_RESPONSE
     #calls the slack API to post the message
