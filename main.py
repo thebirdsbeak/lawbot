@@ -43,9 +43,9 @@ def who_signs(contract_type):
                     signer_list.append(signer)
                 message_string = ''
                 for signer in signer_list:
-                    location =  'https://flightdeck.skyscannertools.net/index.html?id=' + signer.replace(' ', '')
+                    flightdeck_link = build_flightdeck_url(signer)
                     email_address = email_from_name_string(signer) # building email address to find slack user in profiles list
-                    message_string += '{} - {} - {}\n'.format(signer, location, email_address)
+                    message_string += '{} - {} - {}\n'.format(signer, flightdeck_link, "<mailto: {} | Send Email>".format(email_address))
                 return message_string
         except Exception as e:
             return str(e)
@@ -67,6 +67,9 @@ def email_from_name_string(string):
     else:
         email = string.split()[0] + "." + string.split()[1] + "@skyscanner.net"
     return email
+
+def build_flightdeck_url(string):
+    return "<https://flightdeck.skyscannertools.net/index.html?id=" + string.replace(' ', '') + "| View in Flight Deck >"
 
 def handle_command(command, channel):
     """
