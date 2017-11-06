@@ -90,17 +90,21 @@ def who_signs(contract_type, THRESHOLD):
                 if contract:
                     signer_list_emea = [signer for signer in SIGNATORIES[contract][0]]
                     signer_list_apac = [signer for signer in SIGNATORIES[contract][1]]
-                    message_string_emea = '*(¯`·._.·(¯`·._.· EMEA {} ·._.·´¯)·._.·´¯)*\n'.format(contract)
-                    message_string_apac = '*(¯`·._.·(¯`·._.· APAC {} ·._.·´¯)·._.·´¯)*\n'.format(contract)
+                    message_string_emea = '*(¯`·._.·(¯`·._.· EMEA {} ·._.·´¯)·._.·´¯)*\n'.format(contract.upper())
+                    message_string_apac = '*(¯`·._.·(¯`·._.· APAC {} ·._.·´¯)·._.·´¯)*\n'.format(contract.upper())
                     for emea_signer in signer_list_emea:
                         signer = emea_signer.replace(' ', '')
                         location =  'https://flightdeck.skyscannertools.net/index.html?id='+signer
                         message_string_emea += '*{}* - {}\n'.format(emea_signer, location)
                     for apac_signer in signer_list_apac:
                         signer = apac_signer.replace(' ', '')
-                        location =  'https://flightdeck.skyscannertools.net/index.html?id='+signer
-                        message_string_apac += '*{}* - {}\n'.format(apac_signer, location)
+                        if signer != "No_signatories":
+                            location =  'https://flightdeck.skyscannertools.net/index.html?id='+signer
+                            message_string_apac += '*{}* - {}\n'.format(apac_signer, location)
+                        else:
+                            message_string_apac += '*No signatories for this entity.*'
                     return message_string_emea+'\n'+message_string_apac
+
     # Remove returning error before prod
             except Exception as error:
                 return str(error)
