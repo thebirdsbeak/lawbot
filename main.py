@@ -1,65 +1,37 @@
+# -*- coding: utf-8 -*-
+
 '''
 A legal helper slackbot
 '''
 
-#In progress: whosigns command, signatory lisy (SIGNATORIES),
-#To do: make link to binder, process inputs for easier contract type searching
-
 import os
 import time
-from spellcheck import spellcheck
 from slackclient import SlackClient
-from master_list import signatories as SIGNATORIES
+from spellcheck import spellcheck
 from master_list import greetings as greetings
-from fuzzywuzzy import fuzz
 
-# starterbot's ID
-BOT_ID = os.environ.get('BOT_ID')
+from toolbox import maxims, company_details, binder, disclaimer, who_signs
 
 # constants
+BOT_ID = os.environ.get('BOT_ID')
 AT_BOT = "<@{}>".format(BOT_ID)
-
-THRESHOLD = 80 #threshold for spellcheck function 
-
-EXAMPLE_COMMAND = "whosigns"
-
-signer_options = ["NDA", "Partner Order Form", "Freelance Agreement" ]
+THRESHOLD = 80 #threshold for spellcheck function
+ERROR_RESPONSE = "Sorry, I don't understand - try adding 'options' for the choices I know."
 
 # instantiate Slack & Twilio clients
 slack_client = SlackClient(os.environ.get('SLACK_TOKEN'))
 
-def who_signs(contract_type):
-    if contract_type == "options":
-        options = ', '.join(signer_options)
-        return options
-    else:
-        contract_type = contract_type.lower()
-        try:
-            contract_selected = []
-            signer_list = []
-            contract = spellcheck(contract_type, SIGNATORIES, THRESHOLD - 10)
-            if contract:
-                for signer in SIGNATORIES[contract]:
-                    signer_list.append(signer)
-                message_string = ''
-                for signer in signer_list:
-                    flightdeck_link = build_flightdeck_url(signer)
-                    email_address = email_from_name_string(signer) # building email address to find slack user in profiles list
-                    message_string += '{} - {} - {}\n'.format(signer, flightdeck_link, "<mailto: {} | Send Email>".format(email_address))
-                return message_string
-        except Exception as e:
-            return str(e)
-            #return "Not sure about that, I only know: {}.\n Add 'options' after a command for more info.".format(', '.join(signer_options))
-
 def main_options():
-    return '''[whosigns] [type]: Returns authorised signatories for the chosen contract type
-[binder] serves a link to the contract creation system.'''
-
-def binder():
-    return 'https://skyscanner.agiloft.com/gui2/samlssologin.jsp?project=Skyscanner'
+    '''Returns current command options'''
+    return '''[whosigns] [type]: Returns authorised signatories for the chosen contract type\n
+[binder]@ Serves a link to the contract creation system.\n
+[company] [company name]: Search for UK company number and address.\n
+[disclaimer] [channel]: Returns recommended disclaimer wording.\n
+[maxim]: grab a random classic legal principle.'''
 
 def greeting(hello):
-    return ("{} indeed! How can I help?\nEnter @lawbot options for your choices.".format(hello.title()))
+    '''handles greetings and responds in kind'''
+    return ("{} indeed! How can I help?\nEnter ''@lawbot options' for your choices.".format(hello.title()))
 
 def email_from_name_string(string):
     if len(string.split()) < 2:
@@ -73,32 +45,33 @@ def build_flightdeck_url(string):
 
 def handle_command(command, channel):
     """
-        Receives commands directed at the bot and determines if they
-        are valid commands. If so, then acts on the commands. If not,
-        returns back what it needs for clarification.
+        Processes user input and assigns relevant function
     """
-    response = "I didn't catch that - try 'options' for the choices I understand."
-    command = command.split(' ')
-    if spellcheck(command[0], "whosigns", THRESHOLD):
-        contract_type = command[1]
-        response = who_signs(contract_type)
-    elif spellcheck(command[0], "options", THRESHOLD):
+    response = ERROR_RESPONSE
+    bot_input = command.split(' ')
+    main_input = bot_input[0]
+    if spellcheck(main_input, "whosigns", THRESHOLD):
+        response = who_signs(bot_input, THRESHOLD)
+    elif spellcheck(main_input, "options", THRESHOLD):
         response = main_options()
-    elif spellcheck(command[0], "binder", THRESHOLD):
+    elif spellcheck(main_input, "binder", THRESHOLD):
         response = binder()
-    elif spellcheck(command[0], greetings, THRESHOLD):
-        response = greeting(spellcheck(command[0], greetings, THRESHOLD))
-
-    if not response: 
-        response = "Computer says no!"
-
-    #calls the slack API to post te message    
+    elif spellcheck(main_input, "company", THRESHOLD):
+        response = company_details(bot_input)
+    elif spellcheck(main_input, "maxim", THRESHOLD):
+        response = maxims()
+    elif spellcheck(main_input, greetings, THRESHOLD):
+        response = greeting(spellcheck(main_input, greetings, THRESHOLD))
+    elif spellcheck(main_input, "disclaimer", THRESHOLD):
+        response = disclaimer(bot_input, THRESHOLD)
+    if not response:
+        response = ERROR_RESPONSE
+    #calls the slack API to post the message
     slack_client.api_call("chat.postMessage", channel=channel, text=response, as_user=False)
 
 def parse_slack_output(slack_rtm_output):
     """
-        The Slack Real Time Messaging API is an events firehose.
-        this parsing function returns None unless a message is
+        Returns None unless a message is
         directed at the Bot, based on its ID.
     """
     output_list = slack_rtm_output
@@ -109,7 +82,6 @@ def parse_slack_output(slack_rtm_output):
                 return output['text'].split(AT_BOT)[1].strip().lower(), \
                        output['channel']
     return None, None
-
 
 if __name__ == "__main__":
     READ_WEBSOCKET_DELAY = 1 # 1 second delay between reading from firehose
