@@ -96,13 +96,15 @@ def who_signs(contract_type, THRESHOLD):
                     message_string_apac = '*(¯`·._.·(¯`·._.· APAC {} ·._.·´¯)·._.·´¯)*\n'.format(contract.upper())
                     for emea_signer in signer_list_emea:
                         signer = emea_signer.replace(' ', '')
-                        location =  'https://flightdeck.skyscannertools.net/index.html?id='+signer
-                        message_string_emea += '*{}* - {}\n'.format(emea_signer, location)
+                        email = email_from_name_string(emea_signer)
+                        location =  build_flightdeck_url(signer) + "| View in Flight Deck >"
+                        message_string_emea += '*{}* - {} or <mailto:{} | Send Email >\n'.format(emea_signer, location, email)
                     for apac_signer in signer_list_apac:
                         signer = apac_signer.replace(' ', '')
                         if signer != "No_signatories":
-                            location =  'https://flightdeck.skyscannertools.net/index.html?id='+signer
-                            message_string_apac += '*{}* - {}\n'.format(apac_signer, location)
+                            email = email_from_name_string(apac_signer)
+                            location =  build_flightdeck_url(signer) + "| View in Flight Deck >"
+                            message_string_apac += '*{}* - {} or <mailto:{} | Send Email >\n'.format(apac_signer, location, email)
                         else:
                             message_string_apac += '*No signatories for this entity.*'
                     return message_string_emea+'\n'+message_string_apac
@@ -124,10 +126,10 @@ def who_can_advise(query_type, THRESHOLD):
             try:
                 area = spellcheck(query_type[1], ADVISORS, THRESHOLD)
             except:
-                return "I don't understand - try 'disclaimer options' for options."
+                return "I don't understand - try 'whocanadvise options' for options."
             if area:
                 for advisor in (ADVISORS[area]):
-                    response += '{} - {} or <mailto:{} | Send Email >\n'.format(advisor, build_flightdeck_url(advisor), email_from_name_string(advisor))
+                    response += '{} - {} or <mailto:{} | Send Email >\n'.format(advisor, build_flightdeck_url(advisor) + "| View in Flight Deck >", email_from_name_string(advisor))
             else:
                 response = "Nothing found!"
             return response
@@ -135,7 +137,7 @@ def who_can_advise(query_type, THRESHOLD):
         return
 
 def build_flightdeck_url(string):
-    return "<https://flightdeck.skyscannertools.net/index.html?id=" + string.replace(' ', '') + "| View in Flight Deck >"
+    return "<https://flightdeck.skyscannertools.net/index.html?id=" + string.replace(' ', '') 
 
 def email_from_name_string(string):
     if len(string.split()) < 2:
