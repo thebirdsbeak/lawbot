@@ -10,7 +10,7 @@ from slackclient import SlackClient
 from spellcheck import spellcheck
 from master_list import greetings as greetings
 
-from toolbox import maxims, company_details, binder, disclaimer, who_signs
+from toolbox import maxims, company_details, binder, disclaimer, who_signs, who_can_advise
 
 # constants
 BOT_ID = os.environ.get('BOT_ID')
@@ -27,7 +27,8 @@ def main_options():
 [binder]@ Serves a link to the contract creation system.\n
 [company] [company name]: Search for UK company number and address.\n
 [disclaimer] [channel]: Returns recommended disclaimer wording.\n
-[maxim]: grab a random classic legal principle.'''
+[maxim]: grab a random classic legal principle.\n
+[whocanadvise] [area]: Find who the best person in the legal team is to help you'''
 
 def greeting(hello):
     '''handles greetings and responds in kind'''
@@ -64,6 +65,8 @@ def handle_command(command, channel):
         response = greeting(spellcheck(main_input, greetings, THRESHOLD))
     elif spellcheck(main_input, "disclaimer", THRESHOLD):
         response = disclaimer(bot_input, THRESHOLD)
+    elif spellcheck(main_input, "whocanadvise", THRESHOLD):
+        response = who_can_advise(bot_input, THRESHOLD)
     if not response:
         response = ERROR_RESPONSE
     #calls the slack API to post the message
