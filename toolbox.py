@@ -114,36 +114,32 @@ def who_signs(contract_type, THRESHOLD):
         return ERROR_RESPONSE
 
 
-def who_can_advise(contract_type, THRESHOLD):
-    '''Function that grabs and returns the signatories'''
-    if len(contract_type) > 1:
-        if contract_type[1] == "options":
-            options = [key for key in SIGNATORIES]
+def who_can_advise(query_type, THRESHOLD):
+    response = ""
+    if len(query_type) > 1:
+        if query_type[1] == "options":
+            options = [key for key in ADVISORS]
             return ('\n'.join(options)).title()
         else:
-            contract_type = contract_type[1].lower()
             try:
-                contract = spellcheck(contract_type, SIGNATORIES, THRESHOLD - 10)
-                if contract:
-                    signer_list_emea = [signer for signer in SIGNATORIES[contract][0]]
-                    signer_list_apac = [signer for signer in SIGNATORIES[contract][1]]
-                    message_string_emea = '*(¯`·._.·(¯`·._.· EMEA {} ·._.·´¯)·._.·´¯)*\n'.format(contract.upper())
-                    message_string_apac = '*(¯`·._.·(¯`·._.· APAC {} ·._.·´¯)·._.·´¯)*\n'.format(contract.upper())
-                    for emea_signer in signer_list_emea:
-                        signer = emea_signer.replace(' ', '')
-                        location =  'https://flightdeck.skyscannertools.net/index.html?id='+signer
-                        message_string_emea += '*{}* - {}\n'.format(emea_signer, location)
-                    for apac_signer in signer_list_apac:
-                        signer = apac_signer.replace(' ', '')
-                        if signer != "No_signatories":
-                            location =  'https://flightdeck.skyscannertools.net/index.html?id='+signer
-                            message_string_apac += '*{}* - {}\n'.format(apac_signer, location)
-                        else:
-                            message_string_apac += '*No signatories for this entity.*'
-                    return message_string_emea+'\n'+message_string_apac
-
-    # Remove returning error before prod
-            except Exception as error:
-                return str(error)
+                area = spellcheck(query_type[1], ADVISORS, THRESHOLD)
+            except:
+                return "I don't understand - try 'disclaimer options' for options."
+            if area:
+                for advisor in (ADVISORS[area]):
+                    response += '{} - {} or <mailto:{} | Send Email >\n'.format(advisor, build_flightdeck_url(advisor), email_from_name_string(advisor))
+            else:
+                response = "Nothing found!"
+            return response
     else:
-        return ERROR_RESPONSE
+        return
+
+def build_flightdeck_url(string):
+    return "<https://flightdeck.skyscannertools.net/index.html?id=" + string.replace(' ', '') + "| View in Flight Deck >"
+
+def email_from_name_string(string):
+    if len(string.split()) < 2:
+        return False
+    else:
+        email = string.split()[0] + "." + string.split()[1] + "@skyscanner.net"
+    return email
